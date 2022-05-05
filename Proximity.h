@@ -2,6 +2,7 @@
 #define PROXIMITY_H_
 
 #include "DecisionQueue.h"
+#include "DecisorData.h"
 
 #define PACKET_SIZE 128
 #define AVG_PACKET_TX_TIME 0.165781 // <- Average time for a packet transfer
@@ -25,9 +26,12 @@ enum TransferStatus
 class Proximity
 {
 private:
-    // // Queues for keeping track of the RSSI's and gradients
+    // Queues for keeping track of the RSSI's and gradients
     DecisionQueue *rssis;
     DecisionQueue *gradients;
+    // Stored data for decision making
+    DecisorData rssiData;
+    DecisorData gradientData;
 
 public:
     Proximity();
