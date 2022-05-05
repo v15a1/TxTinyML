@@ -3,6 +3,7 @@
 
 #include "DecisionQueue.h"
 #include "DecisorData.h"
+#include "Inferrer.h"
 
 #define PACKET_SIZE 128
 #define AVG_PACKET_TX_TIME 0.165781 // <- Average time for a packet transfer
@@ -32,12 +33,17 @@ private:
     // Stored data for decision making
     DecisorData rssiData;
     DecisorData gradientData;
+    // Inferrer
+    Inferrer* inferrer;
+    // int packetSize;
 
+    float getConfidence(int rssi, float battery);
+    
 public:
     Proximity();
     void reset();
-    float getConfidence(int rssi, float battery);
     float estimateTxTime(float modelSize);
     float normalizeOptimalities(float value);
+    bool getDecision();
 };
 #endif
