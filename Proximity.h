@@ -1,9 +1,12 @@
 #ifndef PROXIMITY_H_
 #define PROXIMITY_H_
 
+#include <Arduino.h>
 #include "DecisionQueue.h"
 #include "DecisorData.h"
 #include "Inferrer.h"
+#include "InferrerMetrics.h"
+#include "Contextualizer.h"
 
 #define PACKET_SIZE 128
 #define AVG_PACKET_TX_TIME 0.165781 // <- Average time for a packet transfer
@@ -34,16 +37,23 @@ private:
     DecisorData rssiData;
     DecisorData gradientData;
     // Inferrer
-    Inferrer* inferrer;
-    // int packetSize;
+    Inferrer *inferrer;
+    Contextualizer *contextualizer;
 
-    float getConfidence(int rssi, float battery);
-    
+    double estimatedModelTXTime;
+    double estimatedTime = 0;
+    int packetCount;
+
+    InferrerMetrics getConfidence(float battery);
+    void estimateTimeForModel(int modelSize);
+    double estimateConnectionTime(double sto);
+    double getTimeEstForGradient(double sto, double refreshT, double exponent);
+
 public:
     Proximity();
     void reset();
     float estimateTxTime(float modelSize);
     float normalizeOptimalities(float value);
-    bool getDecision();
+    bool getDecision(float battery);
 };
 #endif

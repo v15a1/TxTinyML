@@ -47,3 +47,11 @@ int DecisionQueue::getCount()
 {
     return rear;
 }
+
+DecisorData DecisionQueue::toArray()
+{
+    DecisorData data;
+    data.data = queue;
+    data.length = rear;
+    return data;
+}

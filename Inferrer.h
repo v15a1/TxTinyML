@@ -19,15 +19,12 @@ private:
     FuzzySet *highBattery;
 
     FuzzySet *lowSto;
-    FuzzySet *avgSto;
     FuzzySet *highSto;
 
     FuzzySet *lowLto;
-    FuzzySet *avgLto;
     FuzzySet *highLto;
 
     FuzzySet *tx_hold;
-    FuzzySet *tx_potential;
     FuzzySet *tx_send;
 
     void setupTransferRules();
