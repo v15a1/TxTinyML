@@ -17,5 +17,6 @@ private:
     double findCovariance(DecisorData dataX, double meanX, DecisorData dataY, double meanY);
     double findVariance(DecisorData data, double mean);
     double findMean(DecisorData data);
+    double normalizeRSSI(double rssi);
 };
 #endif

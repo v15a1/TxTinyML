@@ -6,55 +6,82 @@
 /// @returns The gradient calculated
 double Contextualizer::getLTO(DecisorData data)
 {
-    // didReceiveNewRSSI = false;
-    // int count = data.length;
+    int count = data.length;
 
-    // if (count < MAX_ST_RSSI_N) // Checking if the minimum number of samples exist for getting the LTO
-    // {
-    //     return 0.0;
-    // }
+    if (count < 8) // Checking if the minimum number of samples exist for getting the LTO
+    {
+        return 0.0;
+    }
 
-    // double score = 0;     // Total RSSI score
-    // double scores[count]; // Array to hold the running averages
-    // double indices[count];
+    double score = 0;     // Total RSSI score
+    double scores[count]; // Array to hold the running averages
+    double indices[count];
 
-    // // Setting the scores/running averages for finding the gradients for
-    // for (int x = 1; x < count; x++)
-    // {
-    //     double rssi = data.data[x];
-    //     double normRSSI = normalizeRSSI(rssi); // normalizing the RSSI values
-    //     score += normRSSI;
-    //     double newScore = score / (double)x; // calculating the running average
-    //     scores[x] = newScore;
-    //     indices[x] = x;
-    // }
+    // Setting the scores/running averages for finding the gradients for
+    for (int x = 1; x < count; x++)
+    {
+        double rssi = data.data[x];
+        double normRSSI = normalizeRSSI(rssi); // normalizing the RSSI values
+        score += normRSSI;
+        double newScore = score / (double)x; // calculating the running average
+        scores[x] = newScore;
+        indices[x] = x;
+    }
 
-    // // Structs to hold the necessary data for gradient calculation
-    // DecisorData yData;
-    // yData.data = scores;
-    // yData.length = count;
+    // Structs to hold the necessary data for gradient calculation
+    DecisorData yData;
+    yData.data = scores;
+    yData.length = count;
 
-    // DecisorData xData;
-    // xData.data = indices;
-    // xData.length = count;
+    DecisorData xData;
+    xData.data = indices;
+    xData.length = count;
 
-    // /* Calculating the gradient using the simple line equation in linear regression
-    //  *
-    //  * Calculates the coefficient 'm' in y = mx + c
-    //  *
-    //  * Gradient is calculated by dividing covariance with the variance calculated using
-    //  * provided parameters
-    //  */
-    // double gradient = calculateGradient(xData, yData);
-    // gradients.enqueue(gradient); // Enqueueing the gradient for calculating the STO
+    /* Calculating the gradient using the simple line equation in linear regression
+     *
+     * Calculates the coefficient 'm' in y = mx + c
+     *
+     * Gradient is calculated by dividing covariance with the variance calculated using
+     * provided parameters
+     */
+    double gradient = calculateGradient(xData, yData);
 
-    // if (count < MIN_LT_RSSI_N || gradient > 0.01 || gradient < -0.01 || isnan(gradient))
-    // {
-    //     return 0.0;
-    // }
-    // return gradient;
+    if (count < 15 || gradient > 0.01 || gradient < -0.01 || isnan(gradient))
+    {
+        return 0.0;
+    }
+    return gradient;
 }
 
+/// @brief Calculates the average gradient change rate for checking if it's ideal for a
+/// transfer in the past few seconds
+/// @param gradients Sequence of previously calculated gradients/LTOs for calculating the STO
+/// @returns The average gradient change rate.
+double Contextualizer::getSTO(DecisorData gradients)
+{
+    double rateSum = 0;
+    int count = gradients.length - 1;
+    for (int x = 0; x < count; x++)
+    {
+        // Calculating the rate upto x + 1 elements
+        double rate = gradients.data[x + 1] - gradients.data[x];
+        rate = truncate(rate, 5);
+        // Checking if value is nan
+        if (!isnan(rate))
+        {
+            rateSum += rate; // Incrementing the rate sum for final averaging
+        }
+        else
+        {
+            count--; // Reducing the number of iterations if a value is nan
+        }
+    }
+    // The average gradient change rate is averaged and returned
+    double sto = rateSum / (double)count;
+    return sto; // Returning the STO
+}
+
+/// Calculating the gradient
 double Contextualizer::findMean(DecisorData data)
 {
     double sum = 0.0;
@@ -109,6 +136,7 @@ double Contextualizer::calculateCoeff(DecisorData dataX, double x_mean, DecisorD
     return b0;
 }
 
+/// @brief Normalizes the optimalities
 double Contextualizer::normalizeOptimality(double value, double max, double min)
 {
     if (isnan(value) || value == 0.0)
@@ -120,6 +148,7 @@ double Contextualizer::normalizeOptimality(double value, double max, double min)
     return truncate(normValue, 6);
 }
 
+/// @brief truncates a double to a fixed number of decimal places
 double Contextualizer::truncate(double val, unsigned char dec)
 {
     double x = val * pow(10, dec);
@@ -134,4 +163,12 @@ double Contextualizer::truncate(double val, unsigned char dec)
     }
     x = y / pow(10, dec);
     return x;
+}
+
+/// @brief Normalizes the RSSI
+double Contextualizer::normalizeRSSI(double rssi)
+{
+    double numerator = rssi - (-100.0);
+    double denomenator = 0 - (-100.0);
+    return truncate(numerator / denomenator, 6);
 }

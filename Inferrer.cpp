@@ -126,6 +126,10 @@ void Inferrer::setupHoldRules()
     fuzzy->addFuzzyRule(fuzzyRule4);
 }
 
+/// @brief Runs inference using the fuzzy logic inferrer
+/// @param lto-normalized LTO value
+/// @param sto-normalized STO value
+/// @param battery-current battery level
 float Inferrer::infer(float lto, float sto, float batteryLevel)
 {
     fuzzy->setInput(1, batteryLevel);
